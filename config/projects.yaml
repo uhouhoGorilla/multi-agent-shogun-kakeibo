@@ -1,0 +1,8 @@
+projects:
+  - id: kakeibo
+    name: "家計簿プロジェクト"
+    path: "/Users/iizukahiiro/workspace/multi-agent-shogun-kakeibo"
+    priority: high
+    status: active
+
+current_project: kakeibo
