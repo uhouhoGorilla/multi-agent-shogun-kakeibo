@@ -29,6 +29,15 @@ export type TransactionsFilter = {
 // Mutable mock data for development
 let devMockTransactions = [...mockTransactions]
 
+// Convert empty strings to null for UUID fields
+function sanitizeUuidFields(data: TransactionInput) {
+  return {
+    ...data,
+    category_id: data.category_id || null,
+    to_account_id: data.to_account_id || null,
+  }
+}
+
 export async function getTransactions(filters?: TransactionsFilter) {
   // Development mode: use mock data
   if (isDevMode()) {
@@ -56,7 +65,7 @@ export async function getTransactions(filters?: TransactionsFilter) {
 
   let query = supabase
     .from('transactions')
-    .select('*, categories(name), accounts(name)', { count: 'exact' })
+    .select('*, categories(name), account:accounts!account_id(name), to_account:accounts!to_account_id(name)', { count: 'exact' })
     .order('transaction_date', { ascending: false })
 
   if (filters?.type) {
@@ -182,7 +191,7 @@ export async function createTransaction(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase.from('transactions') as any).insert({
     user_id: user.id,
-    ...validated.data,
+    ...sanitizeUuidFields(validated.data),
     currency: 'JPY',
   })
 
@@ -233,7 +242,7 @@ export async function updateTransaction(
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase.from('transactions') as any)
-    .update(validated.data)
+    .update(sanitizeUuidFields(validated.data))
     .eq('id', id)
 
   if (error) {
