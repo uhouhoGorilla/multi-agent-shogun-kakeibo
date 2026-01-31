@@ -11,10 +11,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import type { ParseResult } from "@/lib/csv-parsers";
+import type { ParseResult, CardParseResult } from "@/lib/csv-parsers";
 
 interface PreviewTableProps {
-  result: ParseResult;
+  result: ParseResult | CardParseResult;
   onImport: () => void;
   onCancel: () => void;
   isImporting: boolean;
@@ -33,13 +33,24 @@ const bankNames: Record<string, string> = {
   unknown: "不明",
 };
 
+const cardNames: Record<string, string> = {
+  "rakuten-card": "楽天カード",
+  "saison-card": "セゾンカード",
+  "unknown-card": "不明",
+};
+
+function isBankResult(result: ParseResult | CardParseResult): result is ParseResult {
+  return "bankType" in result;
+}
+
 export function PreviewTable({
   result,
   onImport,
   onCancel,
   isImporting,
 }: PreviewTableProps) {
-  const { transactions, errors, bankType, totalIncome, totalExpense } = result;
+  const { transactions, errors } = result;
+  const isBank = isBankResult(result);
 
   return (
     <div className="space-y-6">
@@ -47,40 +58,75 @@ export function PreviewTable({
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>検出された銀行</CardDescription>
+            <CardDescription>
+              {isBank ? "検出された銀行" : "検出されたカード"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{bankNames[bankType]}</p>
+            <p className="text-2xl font-bold">
+              {isBank
+                ? bankNames[result.bankType] || result.bankType
+                : cardNames[result.cardType] || result.cardType}
+            </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>取引件数</CardDescription>
+            <CardDescription>
+              {isBank ? "取引件数" : "明細件数"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">{transactions.length}件</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>合計収入</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-green-600">
-              {formatCurrency(totalIncome)}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>合計支出</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-red-600">
-              {formatCurrency(totalExpense)}
-            </p>
-          </CardContent>
-        </Card>
+        {isBank ? (
+          <>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardDescription>合計収入</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold text-green-600">
+                  {formatCurrency(result.totalIncome)}
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardDescription>合計支出</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold text-red-600">
+                  {formatCurrency(result.totalExpense)}
+                </p>
+              </CardContent>
+            </Card>
+          </>
+        ) : (
+          <>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardDescription>利用合計</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold text-red-600">
+                  {formatCurrency(result.totalExpense)}
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardDescription>返金合計</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold text-green-600">
+                  {formatCurrency(result.totalRefund)}
+                </p>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
 
       {/* エラー表示 */}
@@ -113,7 +159,7 @@ export function PreviewTable({
       {transactions.length > 0 ? (
         <Card>
           <CardHeader>
-            <CardTitle>取引プレビュー</CardTitle>
+            <CardTitle>{isBank ? "取引プレビュー" : "明細プレビュー"}</CardTitle>
             <CardDescription>
               最初の10件を表示しています（全{transactions.length}件）
             </CardDescription>
@@ -124,9 +170,13 @@ export function PreviewTable({
                 <thead>
                   <tr className="border-b">
                     <th className="py-2 text-left font-medium">日付</th>
-                    <th className="py-2 text-left font-medium">摘要</th>
+                    <th className="py-2 text-left font-medium">
+                      {isBank ? "摘要" : "利用先"}
+                    </th>
                     <th className="py-2 text-right font-medium">金額</th>
-                    <th className="py-2 text-right font-medium">残高</th>
+                    <th className="py-2 text-right font-medium">
+                      {isBank ? "残高" : "支払方法"}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -140,18 +190,22 @@ export function PreviewTable({
                       </td>
                       <td
                         className={`py-2 text-right ${
-                          tx.type === "income"
+                          tx.type === "income" || tx.type === "refund"
                             ? "text-green-600"
                             : "text-red-600"
                         }`}
                       >
-                        {tx.type === "income" ? "+" : "-"}
+                        {tx.type === "income" || tx.type === "refund" ? "+" : "-"}
                         {formatCurrency(tx.amount)}
                       </td>
                       <td className="py-2 text-right text-muted-foreground">
-                        {tx.balance !== undefined
-                          ? formatCurrency(tx.balance)
-                          : "-"}
+                        {isBank
+                          ? "balance" in tx && tx.balance !== undefined
+                            ? formatCurrency(tx.balance)
+                            : "-"
+                          : "paymentMethod" in tx && tx.paymentMethod
+                            ? tx.paymentMethod
+                            : "-"}
                       </td>
                     </tr>
                   ))}
@@ -165,7 +219,9 @@ export function PreviewTable({
           <CardContent className="py-8">
             <div className="flex flex-col items-center gap-2 text-destructive">
               <XCircle className="h-12 w-12" />
-              <p className="font-medium">取引データが見つかりませんでした</p>
+              <p className="font-medium">
+                {isBank ? "取引データ" : "明細データ"}が見つかりませんでした
+              </p>
               <p className="text-sm text-muted-foreground">
                 CSVファイルの形式を確認してください
               </p>

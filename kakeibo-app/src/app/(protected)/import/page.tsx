@@ -6,8 +6,15 @@ import { FileUpload } from "@/components/import/file-upload";
 import { PreviewTable } from "@/components/import/preview-table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { previewCSV, importBankCSV, type ImportResult } from "@/lib/actions/import";
-import type { ParseResult } from "@/lib/csv-parsers";
+import {
+  previewCSV,
+  importBankCSV,
+  previewCardCSV,
+  importCardCSV,
+  type ImportResult,
+  type CardImportResult
+} from "@/lib/actions/import";
+import type { ParseResult, CardParseResult } from "@/lib/csv-parsers";
 
 type ImportStep = "select" | "preview" | "complete";
 type ImportType = "bank" | "card";
@@ -15,8 +22,8 @@ type ImportType = "bank" | "card";
 export default function ImportPage() {
   const [step, setStep] = useState<ImportStep>("select");
   const [importType, setImportType] = useState<ImportType>("bank");
-  const [parseResult, setParseResult] = useState<ParseResult | null>(null);
-  const [importResult, setImportResult] = useState<ImportResult | null>(null);
+  const [parseResult, setParseResult] = useState<ParseResult | CardParseResult | null>(null);
+  const [importResult, setImportResult] = useState<ImportResult | CardImportResult | null>(null);
   const [csvContent, setCsvContent] = useState<string>("");
   const [fileName, setFileName] = useState<string>("");
   const [isImporting, setIsImporting] = useState(false);
@@ -26,12 +33,17 @@ export default function ImportPage() {
       setCsvContent(content);
       setFileName(name);
 
-      // プレビュー用にパース
-      const result = await previewCSV(content);
-      setParseResult(result);
+      // プレビュー用にパース（importTypeに応じて分岐）
+      if (importType === "card") {
+        const result = await previewCardCSV(content);
+        setParseResult(result);
+      } else {
+        const result = await previewCSV(content);
+        setParseResult(result);
+      }
       setStep("preview");
     },
-    []
+    [importType]
   );
 
   const handleImport = useCallback(async () => {
@@ -39,15 +51,24 @@ export default function ImportPage() {
 
     setIsImporting(true);
     try {
-      const result = await importBankCSV(csvContent);
-      setImportResult(result);
-      if (result.success) {
-        setStep("complete");
+      // importTypeに応じて適切な関数を呼び出す
+      if (importType === "card") {
+        const result = await importCardCSV(csvContent);
+        setImportResult(result);
+        if (result.success) {
+          setStep("complete");
+        }
+      } else {
+        const result = await importBankCSV(csvContent);
+        setImportResult(result);
+        if (result.success) {
+          setStep("complete");
+        }
       }
     } finally {
       setIsImporting(false);
     }
-  }, [csvContent]);
+  }, [csvContent, importType]);
 
   const handleCancel = useCallback(() => {
     setStep("select");
@@ -265,20 +286,41 @@ export default function ImportPage() {
               <div className="mt-4 grid gap-4 text-center md:grid-cols-3">
                 <div>
                   <p className="text-3xl font-bold">{importResult.importedCount}</p>
-                  <p className="text-sm text-muted-foreground">件の取引</p>
-                </div>
-                <div>
-                  <p className="text-3xl font-bold text-green-600">
-                    +¥{importResult.totalIncome.toLocaleString()}
+                  <p className="text-sm text-muted-foreground">
+                    {importType === "card" ? "件の明細" : "件の取引"}
                   </p>
-                  <p className="text-sm text-muted-foreground">収入合計</p>
                 </div>
-                <div>
-                  <p className="text-3xl font-bold text-red-600">
-                    -¥{importResult.totalExpense.toLocaleString()}
-                  </p>
-                  <p className="text-sm text-muted-foreground">支出合計</p>
-                </div>
+                {"totalIncome" in importResult ? (
+                  <>
+                    <div>
+                      <p className="text-3xl font-bold text-green-600">
+                        +¥{importResult.totalIncome.toLocaleString()}
+                      </p>
+                      <p className="text-sm text-muted-foreground">収入合計</p>
+                    </div>
+                    <div>
+                      <p className="text-3xl font-bold text-red-600">
+                        -¥{importResult.totalExpense.toLocaleString()}
+                      </p>
+                      <p className="text-sm text-muted-foreground">支出合計</p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <p className="text-3xl font-bold text-red-600">
+                        -¥{importResult.totalExpense.toLocaleString()}
+                      </p>
+                      <p className="text-sm text-muted-foreground">利用合計</p>
+                    </div>
+                    <div>
+                      <p className="text-3xl font-bold text-green-600">
+                        +¥{importResult.totalRefund.toLocaleString()}
+                      </p>
+                      <p className="text-sm text-muted-foreground">返金合計</p>
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className="mt-6">
