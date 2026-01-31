@@ -89,6 +89,7 @@ export function TransactionsClient({
         setData(newData)
       })
     }
+    return result
   }
 
   const handleEdit = (transaction: TransactionData) => {
@@ -97,7 +98,7 @@ export function TransactionsClient({
   }
 
   const handleUpdate = async (input: TransactionFormInput) => {
-    if (!selectedTransaction) return
+    if (!selectedTransaction) return { error: '取引が選択されていません' }
 
     const result = await updateTransaction(selectedTransaction.id, {
       ...input,
@@ -116,6 +117,7 @@ export function TransactionsClient({
         setData(newData)
       })
     }
+    return result
   }
 
   const handleDeleteClick = (transaction: TransactionData) => {
@@ -242,6 +244,7 @@ export function TransactionsClient({
                     </TableCell>
                     <TableCell>
                       {transaction.account_name ||
+                        (transaction as { account?: { name: string } }).account?.name ||
                         (transaction as { accounts?: { name: string } }).accounts?.name ||
                         '-'}
                     </TableCell>

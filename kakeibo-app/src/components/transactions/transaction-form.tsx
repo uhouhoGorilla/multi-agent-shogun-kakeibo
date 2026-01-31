@@ -51,7 +51,7 @@ interface TransactionFormProps {
   categories: Category[]
   accounts: Account[]
   defaultValues?: Partial<TransactionFormInput>
-  onSubmit: (data: TransactionFormInput) => Promise<void>
+  onSubmit: (data: TransactionFormInput) => Promise<{ success?: boolean; error?: string }>
   isEditing?: boolean
 }
 
@@ -109,9 +109,12 @@ export function TransactionForm({
   )
 
   const handleSubmit = async (data: TransactionFormInput) => {
-    await onSubmit(data)
-    form.reset()
-    onOpenChange(false)
+    const result = await onSubmit(data)
+    if (result.success) {
+      form.reset()
+      onOpenChange(false)
+    }
+    // Error handling is done by the parent component
   }
 
   return (
