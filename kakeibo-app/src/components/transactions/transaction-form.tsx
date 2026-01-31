@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { format } from 'date-fns'
@@ -83,6 +84,23 @@ export function TransactionForm({
       ...defaultValues,
     },
   })
+
+  // Reset form when defaultValues change (e.g., when editing a different transaction)
+  useEffect(() => {
+    if (open) {
+      form.reset({
+        transaction_type: 'expense',
+        amount: '',
+        transaction_date: format(new Date(), 'yyyy-MM-dd'),
+        description: '',
+        memo: '',
+        account_id: '',
+        to_account_id: '',
+        category_id: '',
+        ...defaultValues,
+      })
+    }
+  }, [open, defaultValues, form])
 
   const watchType = form.watch('transaction_type')
 

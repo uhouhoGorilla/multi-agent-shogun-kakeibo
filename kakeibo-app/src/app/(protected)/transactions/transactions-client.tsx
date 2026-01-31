@@ -79,9 +79,13 @@ export function TransactionsClient({
     })
 
     if (result.success) {
-      // Refresh data
+      // Refresh data with current filter
       startTransition(async () => {
-        const newData = await getTransactions({ page: 1, limit: 20 })
+        const newData = await getTransactions({
+          page: 1,
+          limit: 20,
+          type: typeFilter === 'all' ? undefined : typeFilter as 'income' | 'expense' | 'transfer',
+        })
         setData(newData)
       })
     }
@@ -102,8 +106,13 @@ export function TransactionsClient({
 
     if (result.success) {
       setSelectedTransaction(null)
+      // Refresh data with current filter
       startTransition(async () => {
-        const newData = await getTransactions({ page: 1, limit: 20 })
+        const newData = await getTransactions({
+          page: 1,
+          limit: 20,
+          type: typeFilter === 'all' ? undefined : typeFilter as 'income' | 'expense' | 'transfer',
+        })
         setData(newData)
       })
     }
@@ -122,8 +131,13 @@ export function TransactionsClient({
     if (result.success) {
       setIsDeleteOpen(false)
       setSelectedTransaction(null)
+      // Refresh data with current filter
       startTransition(async () => {
-        const newData = await getTransactions({ page: 1, limit: 20 })
+        const newData = await getTransactions({
+          page: 1,
+          limit: 20,
+          type: typeFilter === 'all' ? undefined : typeFilter as 'income' | 'expense' | 'transfer',
+        })
         setData(newData)
       })
     }
