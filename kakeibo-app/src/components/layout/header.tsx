@@ -3,6 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { Menu, Wallet, User, LogOut, Settings } from "lucide-react"
+import { logout } from "@/lib/actions/auth"
 
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -35,8 +36,7 @@ export function Header({ user }: HeaderProps) {
   const [isSheetOpen, setIsSheetOpen] = useState(false)
 
   const handleLogout = async () => {
-    // TODO: Implement logout logic with Supabase
-    console.log("Logout clicked")
+    await logout()
   }
 
   const getInitials = (name?: string, email?: string) => {

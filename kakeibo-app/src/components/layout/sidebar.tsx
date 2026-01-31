@@ -6,12 +6,8 @@ import {
   LayoutDashboard,
   ArrowLeftRight,
   Tags,
+  Upload,
   Wallet,
-  CreditCard,
-  Receipt,
-  PiggyBank,
-  BarChart3,
-  Settings,
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -33,35 +29,17 @@ const navigationItems = [
     icon: Tags,
   },
   {
-    title: "口座管理",
-    href: "/accounts",
-    icon: Wallet,
+    title: "データインポート",
+    href: "/import",
+    icon: Upload,
   },
-  {
-    title: "クレジットカード",
-    href: "/credit-cards",
-    icon: CreditCard,
-  },
-  {
-    title: "ローン管理",
-    href: "/loans",
-    icon: Receipt,
-  },
-  {
-    title: "予算設定",
-    href: "/budgets",
-    icon: PiggyBank,
-  },
-  {
-    title: "レポート",
-    href: "/reports",
-    icon: BarChart3,
-  },
-  {
-    title: "設定",
-    href: "/settings",
-    icon: Settings,
-  },
+  // TODO: Phase 4以降で実装
+  // { title: "口座管理", href: "/accounts", icon: Wallet },
+  // { title: "クレジットカード", href: "/credit-cards", icon: CreditCard },
+  // { title: "ローン管理", href: "/loans", icon: Receipt },
+  // { title: "予算設定", href: "/budgets", icon: PiggyBank },
+  // { title: "レポート", href: "/reports", icon: BarChart3 },
+  // { title: "設定", href: "/settings", icon: Settings },
 ]
 
 interface SidebarProps {
