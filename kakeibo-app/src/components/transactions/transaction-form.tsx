@@ -41,7 +41,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 
-type Category = { id: string; name: string; type?: string }
+type Category = { id: string; name: string; transaction_type?: string }
 type Account = { id: string; name: string }
 
 interface TransactionFormProps {
@@ -87,7 +87,7 @@ export function TransactionForm({
   const watchType = form.watch('transaction_type')
 
   const filteredCategories = categories.filter(
-    (c) => !c.type || c.type === watchType
+    (c) => !c.transaction_type || c.transaction_type === watchType
   )
 
   const handleSubmit = async (data: TransactionFormInput) => {
