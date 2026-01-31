@@ -495,6 +495,10 @@ if [ "$SETUP_ONLY" = false ]; then
     # 将軍
     tmux send-keys -t shogun "MAX_THINKING_TOKENS=0 claude --model opus --dangerously-skip-permissions"
     tmux send-keys -t shogun Enter
+    # Bypass permissions確認プロンプトで "2" (Yes, I accept) を選択
+    sleep 2
+    tmux send-keys -t shogun "2"
+    tmux send-keys -t shogun Enter
     log_info "  └─ 将軍、召喚完了"
 
     # 少し待機（安定のため）
@@ -503,6 +507,10 @@ if [ "$SETUP_ONLY" = false ]; then
     # 家老 + 足軽（9ペイン）
     for i in {0..8}; do
         tmux send-keys -t "multiagent:0.$i" "claude --dangerously-skip-permissions"
+        tmux send-keys -t "multiagent:0.$i" Enter
+        # Bypass permissions確認プロンプトで "2" (Yes, I accept) を選択
+        sleep 1
+        tmux send-keys -t "multiagent:0.$i" "2"
         tmux send-keys -t "multiagent:0.$i" Enter
     done
     log_info "  └─ 家老・足軽、召喚完了"
