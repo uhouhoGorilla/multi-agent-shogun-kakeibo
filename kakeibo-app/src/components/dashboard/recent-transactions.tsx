@@ -1,86 +1,76 @@
-"use client";
+'use client'
 
-import Link from "next/link";
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardFooter,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
-
-interface Transaction {
-  id: string;
-  date: string;
-  description: string;
-  category: string;
-  amount: number;
-  type: "income" | "expense";
-}
-
-// モックデータ
-const mockTransactions: Transaction[] = [
-  {
-    id: "1",
-    date: "2026-01-30",
-    description: "スーパーマーケット",
-    category: "食費",
-    amount: 3500,
-    type: "expense",
-  },
-  {
-    id: "2",
-    date: "2026-01-29",
-    description: "給与",
-    category: "収入",
-    amount: 300000,
-    type: "income",
-  },
-  {
-    id: "3",
-    date: "2026-01-28",
-    description: "電気代",
-    category: "光熱費",
-    amount: 8500,
-    type: "expense",
-  },
-  {
-    id: "4",
-    date: "2026-01-27",
-    description: "ランチ",
-    category: "食費",
-    amount: 980,
-    type: "expense",
-  },
-  {
-    id: "5",
-    date: "2026-01-26",
-    description: "副業報酬",
-    category: "収入",
-    amount: 50000,
-    type: "income",
-  },
-];
+} from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { ArrowRight, Receipt } from 'lucide-react'
+import {
+  getRecentTransactions,
+  type RecentTransaction,
+} from '@/lib/actions/dashboard'
 
 function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("ja-JP", {
-    style: "currency",
-    currency: "JPY",
-  }).format(amount);
+  return new Intl.NumberFormat('ja-JP', {
+    style: 'currency',
+    currency: 'JPY',
+  }).format(amount)
 }
 
 function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return new Intl.DateTimeFormat("ja-JP", {
-    month: "short",
-    day: "numeric",
-  }).format(date);
+  const date = new Date(dateString)
+  return new Intl.DateTimeFormat('ja-JP', {
+    month: 'short',
+    day: 'numeric',
+  }).format(date)
 }
 
 export function RecentTransactions() {
-  const transactions = mockTransactions;
+  const [transactions, setTransactions] = useState<RecentTransaction[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const data = await getRecentTransactions(10)
+        setTransactions(data)
+      } catch (error) {
+        console.error('Failed to fetch recent transactions:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>直近の取引</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="flex items-center justify-between border-b pb-3">
+                <div className="space-y-2">
+                  <div className="h-4 w-32 bg-muted animate-pulse rounded" />
+                  <div className="h-3 w-24 bg-muted animate-pulse rounded" />
+                </div>
+                <div className="h-5 w-20 bg-muted animate-pulse rounded" />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <Card>
@@ -88,33 +78,46 @@ export function RecentTransactions() {
         <CardTitle>直近の取引</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          {transactions.map((transaction) => (
-            <div
-              key={transaction.id}
-              className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0"
-            >
-              <div className="flex flex-col gap-1">
-                <span className="font-medium">{transaction.description}</span>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <span>{formatDate(transaction.date)}</span>
-                  <span>•</span>
-                  <span>{transaction.category}</span>
-                </div>
-              </div>
-              <span
-                className={`font-semibold ${
-                  transaction.type === "income"
-                    ? "text-green-600"
-                    : "text-red-600"
-                }`}
+        {transactions.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-6 text-center">
+            <Receipt className="h-12 w-12 text-muted-foreground/50 mb-2" />
+            <p className="text-sm text-muted-foreground">
+              取引がありません
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {transactions.map((transaction) => (
+              <div
+                key={transaction.id}
+                className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0"
               >
-                {transaction.type === "income" ? "+" : "-"}
-                {formatCurrency(transaction.amount)}
-              </span>
-            </div>
-          ))}
-        </div>
+                <div className="flex flex-col gap-1">
+                  <span className="font-medium">
+                    {transaction.description || '(説明なし)'}
+                  </span>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span>{formatDate(transaction.date)}</span>
+                    <span>•</span>
+                    <span>{transaction.category}</span>
+                  </div>
+                </div>
+                <span
+                  className={`font-semibold ${
+                    transaction.type === 'income'
+                      ? 'text-green-600'
+                      : transaction.type === 'expense'
+                      ? 'text-red-600'
+                      : 'text-blue-600'
+                  }`}
+                >
+                  {transaction.type === 'income' ? '+' : transaction.type === 'expense' ? '-' : ''}
+                  {formatCurrency(transaction.amount)}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </CardContent>
       <CardFooter>
         <Button variant="ghost" className="w-full" asChild>
@@ -125,5 +128,5 @@ export function RecentTransactions() {
         </Button>
       </CardFooter>
     </Card>
-  );
+  )
 }
