@@ -27,7 +27,7 @@ export type TransactionsFilter = {
 }
 
 // Mutable mock data for development
-let devMockTransactions = [...mockTransactions]
+const devMockTransactions = [...mockTransactions]
 
 // Convert empty strings to null for UUID fields
 function sanitizeUuidFields(data: TransactionInput) {
