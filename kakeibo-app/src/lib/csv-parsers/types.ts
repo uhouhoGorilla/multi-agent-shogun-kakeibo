@@ -62,11 +62,12 @@ export interface CSVParser {
 
 // 日付フォーマット変換
 export function parseJapaneseDate(dateStr: string): Date | null {
-  // YYYY/MM/DD or YYYY-MM-DD or YYYYMMDD
+  // YYYY/MM/DD or YYYY-MM-DD or YYYY.MM.DD or YYYYMMDD
   const patterns = [
     /^(\d{4})\/(\d{1,2})\/(\d{1,2})$/,
     /^(\d{4})-(\d{1,2})-(\d{1,2})$/,
-    /^(\d{4})(\d{2})(\d{2})$/,
+    /^(\d{4})\.(\d{1,2})\.(\d{1,2})$/,  // みずほ銀行形式: 2025.10.23
+    /^(\d{4})(\d{2})(\d{2})$/,           // 楽天銀行形式: 20240418
   ];
 
   for (const pattern of patterns) {

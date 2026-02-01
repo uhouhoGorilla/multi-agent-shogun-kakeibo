@@ -58,15 +58,18 @@ export const rakutenBankParser: CSVParser = {
     let descriptionIndex = -1;
 
     headers.forEach((header, index) => {
-      const h = header.toLowerCase();
+      const h = header;
       if (h.includes("取引日") || h.includes("日付")) {
         dateIndex = index;
-      } else if (h.includes("入出金") && !h.includes("先")) {
+      } else if (h.includes("入出金内容") || h.includes("入出金先") || h.includes("摘要")) {
+        // 摘要カラム: 「入出金内容」「入出金先内容」「摘要」
+        descriptionIndex = index;
+      } else if (h.includes("入出金") && h.includes("円")) {
+        // 金額カラム: 「入出金(円)」- 「円」を含む入出金
         amountIndex = index;
       } else if (h.includes("残高")) {
+        // 残高カラム: 「取引後残高(円)」「残高(円)」「残高」
         balanceIndex = index;
-      } else if (h.includes("入出金先") || h.includes("摘要") || h.includes("内容")) {
-        descriptionIndex = index;
       }
     });
 
