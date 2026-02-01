@@ -1,7 +1,8 @@
-import { SummaryCards } from "@/components/dashboard/summary-cards";
-import { RecentTransactions } from "@/components/dashboard/recent-transactions";
-import { BudgetProgress } from "@/components/dashboard/budget-progress";
-import { ChartsPlaceholder } from "@/components/dashboard/charts-placeholder";
+import { SummaryCards } from '@/components/dashboard/summary-cards'
+import { RecentTransactions } from '@/components/dashboard/recent-transactions'
+import { BudgetProgress } from '@/components/dashboard/budget-progress'
+import { ChartsPlaceholder } from '@/components/dashboard/charts-placeholder'
+import { UpcomingLoanPayments } from '@/components/dashboard/upcoming-loan-payments'
 
 export default function DashboardPage() {
   return (
@@ -19,17 +20,20 @@ export default function DashboardPage() {
       {/* サマリーカード */}
       <SummaryCards />
 
-      {/* メインコンテンツ: 2カラムレイアウト */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      {/* グラフ */}
+      <ChartsPlaceholder />
+
+      {/* メインコンテンツ: 3カラムレイアウト */}
+      <div className="grid gap-6 lg:grid-cols-3">
         {/* 直近の取引 */}
         <RecentTransactions />
+
+        {/* ローン返済予定 */}
+        <UpcomingLoanPayments />
 
         {/* 予算進捗 */}
         <BudgetProgress />
       </div>
-
-      {/* グラフプレースホルダー */}
-      <ChartsPlaceholder />
     </div>
-  );
+  )
 }

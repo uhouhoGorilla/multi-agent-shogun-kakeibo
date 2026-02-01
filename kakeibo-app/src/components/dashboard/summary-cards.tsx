@@ -1,37 +1,79 @@
-"use client";
+'use client'
 
+import { useEffect, useState } from 'react'
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { TrendingUp, TrendingDown, Wallet, ArrowUpDown } from "lucide-react";
-
-interface SummaryData {
-  income: number;
-  expense: number;
-  balance: number;
-  previousMonthDiff: number;
-}
-
-// モックデータ
-const mockData: SummaryData = {
-  income: 350000,
-  expense: 245000,
-  balance: 105000,
-  previousMonthDiff: 12.5,
-};
+} from '@/components/ui/card'
+import { TrendingUp, TrendingDown, Wallet, ArrowUpDown } from 'lucide-react'
+import { getDashboardSummary, type DashboardSummary } from '@/lib/actions/dashboard'
 
 function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("ja-JP", {
-    style: "currency",
-    currency: "JPY",
-  }).format(amount);
+  return new Intl.NumberFormat('ja-JP', {
+    style: 'currency',
+    currency: 'JPY',
+  }).format(amount)
+}
+
+function formatChange(change: number): string {
+  const sign = change >= 0 ? '+' : ''
+  return `${sign}${change.toFixed(1)}%`
+}
+
+function ChangeIndicator({ change, label }: { change: number; label: string }) {
+  const isPositive = change >= 0
+  return (
+    <p className="text-xs text-muted-foreground flex items-center gap-1">
+      <span className={isPositive ? 'text-green-600' : 'text-red-600'}>
+        {formatChange(change)}
+      </span>
+      <span>{label}</span>
+    </p>
+  )
 }
 
 export function SummaryCards() {
-  const data = mockData;
+  const [data, setData] = useState<DashboardSummary | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const summary = await getDashboardSummary()
+        setData(summary)
+      } catch (error) {
+        console.error('Failed to fetch dashboard summary:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {[...Array(4)].map((_, i) => (
+          <Card key={i}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div className="h-4 w-20 bg-muted animate-pulse rounded" />
+              <div className="h-4 w-4 bg-muted animate-pulse rounded" />
+            </CardHeader>
+            <CardContent>
+              <div className="h-8 w-32 bg-muted animate-pulse rounded mb-2" />
+              <div className="h-3 w-24 bg-muted animate-pulse rounded" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    )
+  }
+
+  if (!data) {
+    return null
+  }
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -45,7 +87,7 @@ export function SummaryCards() {
           <div className="text-2xl font-bold text-green-600">
             {formatCurrency(data.income)}
           </div>
-          <p className="text-xs text-muted-foreground">給与・副収入など</p>
+          <ChangeIndicator change={data.incomeChange} label="先月比" />
         </CardContent>
       </Card>
 
@@ -59,7 +101,7 @@ export function SummaryCards() {
           <div className="text-2xl font-bold text-red-600">
             {formatCurrency(data.expense)}
           </div>
-          <p className="text-xs text-muted-foreground">食費・光熱費など</p>
+          <ChangeIndicator change={-data.expenseChange} label="先月比" />
         </CardContent>
       </Card>
 
@@ -70,10 +112,12 @@ export function SummaryCards() {
           <Wallet className="h-4 w-4 text-blue-600" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-blue-600">
+          <div className={`text-2xl font-bold ${data.balance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
             {formatCurrency(data.balance)}
           </div>
-          <p className="text-xs text-muted-foreground">収入 - 支出</p>
+          <p className="text-xs text-muted-foreground">
+            先月: {formatCurrency(data.previousMonthBalance)}
+          </p>
         </CardContent>
       </Card>
 
@@ -86,15 +130,16 @@ export function SummaryCards() {
         <CardContent>
           <div
             className={`text-2xl font-bold ${
-              data.previousMonthDiff >= 0 ? "text-green-600" : "text-red-600"
+              data.balanceChange >= 0 ? 'text-green-600' : 'text-red-600'
             }`}
           >
-            {data.previousMonthDiff >= 0 ? "+" : ""}
-            {data.previousMonthDiff.toFixed(1)}%
+            {formatChange(data.balanceChange)}
           </div>
-          <p className="text-xs text-muted-foreground">残高の変動率</p>
+          <p className="text-xs text-muted-foreground">
+            {data.balanceChange >= 0 ? '改善' : '悪化'}（残高の変動）
+          </p>
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }
