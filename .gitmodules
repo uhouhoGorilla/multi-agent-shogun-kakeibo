@@ -1,0 +1,4 @@
+[submodule "multi-agent-shogun"]
+	path = multi-agent-shogun
+	url = https://github.com/yohey-w/multi-agent-shogun.git
+	pushurl = DISABLE
