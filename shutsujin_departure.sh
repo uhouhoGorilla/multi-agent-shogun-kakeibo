@@ -204,6 +204,14 @@ echo -e "  \033[1;33m天下布武！陣立てを開始いたす\033[0m (Setting 
 echo ""
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# STEP 0.5: tmuxグローバル設定（スクロール・マウス対応）
+# ═══════════════════════════════════════════════════════════════════════════════
+log_info "🖱️ tmux スクロール設定を適用中..."
+tmux set-option -g mouse on 2>/dev/null || true
+tmux set-option -g history-limit 10000 2>/dev/null || true
+log_success "  └─ マウススクロール・履歴バッファ設定完了"
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # STEP 1: 既存セッションクリーンアップ
 # ═══════════════════════════════════════════════════════════════════════════════
 log_info "🧹 既存の陣を撤収中..."
@@ -496,8 +504,10 @@ if [ "$SETUP_ONLY" = false ]; then
     tmux send-keys -t shogun "MAX_THINKING_TOKENS=0 claude --model opus --dangerously-skip-permissions"
     tmux send-keys -t shogun Enter
     # Bypass permissions確認プロンプトで "2" (Yes, I accept) を選択
-    sleep 2
-    tmux send-keys -t shogun "2"
+    # TUI選択UIのため、Downキーで2番目の選択肢に移動してEnterで確定
+    sleep 3
+    tmux send-keys -t shogun Down
+    sleep 0.3
     tmux send-keys -t shogun Enter
     log_info "  └─ 将軍、召喚完了"
 
@@ -509,8 +519,10 @@ if [ "$SETUP_ONLY" = false ]; then
         tmux send-keys -t "multiagent:0.$i" "claude --dangerously-skip-permissions"
         tmux send-keys -t "multiagent:0.$i" Enter
         # Bypass permissions確認プロンプトで "2" (Yes, I accept) を選択
-        sleep 1
-        tmux send-keys -t "multiagent:0.$i" "2"
+        # TUI選択UIのため、Downキーで2番目の選択肢に移動してEnterで確定
+        sleep 2
+        tmux send-keys -t "multiagent:0.$i" Down
+        sleep 0.3
         tmux send-keys -t "multiagent:0.$i" Enter
     done
     log_info "  └─ 家老・足軽、召喚完了"
