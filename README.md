@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/uhouhogorilla-multi-agent-shogun-kakeibo-badge.png)](https://mseep.ai/app/uhouhogorilla-multi-agent-shogun-kakeibo)
+
 # multi-agent-shogun
 
 <div align="center">
